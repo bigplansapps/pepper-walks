@@ -609,7 +609,7 @@ export default function App() {
                     transition: "all 0.2s",
                   }}
                 >
-                  {w === "You" ? "🙋 Me" : "🙋‍♀️ Her"}
+                  {w === "You" ? "🙋 Matt" : "🙋‍♀️ Sarah"}
                 </button>
               ))}
             </div>
