@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import {
   collection,
@@ -35,83 +35,135 @@ function formatFullDate(iso) {
   });
 }
 
-/* ── iOS-style toggle ── */
-function IOSToggle({ label, value, onChange }) {
+/* ── splash screen ── */
+function SplashScreen({ onDone }) {
+  const [fadeOut, setFadeOut] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setFadeOut(true), 1800);
+    const t2 = setTimeout(onDone, 2300);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [onDone]);
+
   return (
     <div
-      onClick={() => onChange(!value)}
       style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        background: "#000",
         display: "flex",
-        justifyContent: "space-between",
+        flexDirection: "column",
         alignItems: "center",
-        padding: "12px 16px",
-        cursor: "pointer",
+        justifyContent: "center",
+        opacity: fadeOut ? 0 : 1,
+        transition: "opacity 0.5s ease",
       }}
     >
-      <span style={{ fontSize: 16, color: "#1c1c1e" }}>{label}</span>
       <div
         style={{
-          width: 51,
-          height: 31,
-          borderRadius: 16,
-          background: value ? "#34C759" : "#e9e9eb",
-          padding: 2,
-          transition: "background 0.2s",
-          cursor: "pointer",
+          width: 160,
+          height: 160,
+          borderRadius: "50%",
+          overflow: "hidden",
+          border: "3px solid rgba(255,255,255,0.15)",
+          marginBottom: 20,
+          animation: "scaleIn 0.6s ease",
         }}
       >
-        <div
-          style={{
-            width: 27,
-            height: 27,
-            borderRadius: "50%",
-            background: "#fff",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
-            transition: "transform 0.2s",
-            transform: value ? "translateX(20px)" : "translateX(0)",
-          }}
+        <img
+          src="/pepper.jpg"
+          alt="Pepper"
+          style={{ width: "100%", height: "100%", objectFit: "cover" }}
         />
+      </div>
+      <div
+        style={{
+          color: "#fff",
+          fontSize: 28,
+          fontWeight: 700,
+          letterSpacing: -0.5,
+          animation: "fadeUp 0.6s ease 0.2s both",
+        }}
+      >
+        Pepper 🐾
+      </div>
+      <div
+        style={{
+          color: "rgba(255,255,255,0.4)",
+          fontSize: 14,
+          marginTop: 6,
+          fontWeight: 500,
+          animation: "fadeUp 0.6s ease 0.4s both",
+        }}
+      >
+        Walk Tracker
       </div>
     </div>
   );
 }
 
-/* ── rating selector ── */
-function RatingSelector({ value, onChange }) {
+/* ── iOS toggle ── */
+function Toggle({ value, onChange }) {
   return (
-    <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
-      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-        <button
-          key={n}
-          onClick={() => onChange(n)}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            border: "none",
-            background: n <= value ? "#007AFF" : "#f2f2f7",
-            color: n <= value ? "#fff" : "#8e8e93",
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: "pointer",
-            transition: "all 0.15s",
-          }}
-        >
-          {n}
-        </button>
-      ))}
+    <div
+      onClick={() => onChange(!value)}
+      style={{
+        width: 51,
+        height: 31,
+        borderRadius: 16,
+        background: value ? "#007AFF" : "#e9e9eb",
+        padding: 2,
+        transition: "background 0.2s",
+        cursor: "pointer",
+        flexShrink: 0,
+      }}
+    >
+      <div
+        style={{
+          width: 27,
+          height: 27,
+          borderRadius: "50%",
+          background: "#fff",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          transition: "transform 0.2s",
+          transform: value ? "translateX(20px)" : "translateX(0)",
+        }}
+      />
     </div>
   );
 }
 
-/* ── iOS card wrapper ── */
+/* ── row inside a card ── */
+function CardRow({ label, children, last }) {
+  return (
+    <>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          padding: "13px 16px",
+          minHeight: 44,
+        }}
+      >
+        <span style={{ fontSize: 16, color: "#1c1c1e" }}>{label}</span>
+        {children}
+      </div>
+      {!last && <div style={{ height: 0.5, background: "#e5e5ea", marginLeft: 16 }} />}
+    </>
+  );
+}
+
+/* ── card ── */
 function Card({ children, style }) {
   return (
     <div
       style={{
         background: "#fff",
-        borderRadius: 12,
-        marginBottom: 12,
+        borderRadius: 10,
+        marginBottom: 16,
+        boxShadow: "0 0.5px 0 rgba(0,0,0,0.04)",
         overflow: "hidden",
         ...style,
       }}
@@ -121,141 +173,202 @@ function Card({ children, style }) {
   );
 }
 
-/* ── divider ── */
-function Divider() {
-  return <div style={{ height: 1, background: "#f2f2f7", marginLeft: 16 }} />;
+/* ── section label ── */
+function SectionLabel({ children, style }) {
+  return (
+    <div
+      style={{
+        fontSize: 13,
+        fontWeight: 500,
+        color: "#6e6e73",
+        textTransform: "uppercase",
+        letterSpacing: 0.3,
+        padding: "0 16px",
+        marginBottom: 6,
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ── rating row (single line) ── */
+function RatingRow({ value, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: 3, padding: "12px 10px", justifyContent: "center" }}>
+      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+        <button
+          key={n}
+          onClick={() => onChange(n)}
+          style={{
+            width: 30,
+            height: 30,
+            borderRadius: 8,
+            border: "none",
+            background: n <= value ? "#007AFF" : "#f2f2f7",
+            color: n <= value ? "#fff" : "#8e8e93",
+            fontSize: 13,
+            fontWeight: 600,
+            cursor: "pointer",
+            transition: "all 0.12s",
+            padding: 0,
+          }}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 /* ── walk card ── */
 function WalkCard({ walk, onDelete }) {
   const [expanded, setExpanded] = useState(false);
+  const walkers = walk.walker || "";
 
   return (
-    <div
-      onClick={() => setExpanded(!expanded)}
-      style={{
-        padding: "14px 16px",
-        cursor: "pointer",
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div style={{ flex: 1 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ fontSize: 16, fontWeight: 600, color: "#1c1c1e" }}>
-              {walk.walker}
-            </span>
-            <span style={{ fontSize: 14, color: "#8e8e93" }}>
-              {formatDate(walk.date)}
-            </span>
-          </div>
-          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
-            {walk.duration && (
-              <span style={{ fontSize: 13, color: "#8e8e93" }}>
-                {walk.duration} min
-              </span>
+    <div onClick={() => setExpanded(!expanded)} style={{ cursor: "pointer" }}>
+      <div style={{ padding: "12px 16px" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            {walk.title && (
+              <div style={{ fontSize: 16, fontWeight: 600, color: "#1c1c1e", marginBottom: 2 }}>
+                {walk.title}
+              </div>
             )}
-            {walk.lunged && (
-              <span
-                style={{
-                  fontSize: 12,
-                  background: "#FFF3CD",
-                  color: "#856404",
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  fontWeight: 500,
-                }}
-              >
-                Lunged
+            <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 14, fontWeight: 500, color: "#3a3a3c" }}>
+                {walkers}
               </span>
-            )}
-            {walk.dogPark && (
-              <span
-                style={{
-                  fontSize: 12,
-                  background: "#D1ECF1",
-                  color: "#0C5460",
-                  padding: "2px 8px",
-                  borderRadius: 6,
-                  fontWeight: 500,
-                }}
-              >
-                Dog Park
+              <span style={{ fontSize: 13, color: "#aeaeb2" }}>
+                {formatDate(walk.date)}
               </span>
-            )}
+            </div>
+            <div style={{ display: "flex", gap: 5, marginTop: 5, flexWrap: "wrap" }}>
+              {walk.duration && (
+                <span style={{ fontSize: 12, color: "#aeaeb2" }}>{walk.duration} min</span>
+              )}
+              {walk.lunged && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: "#FFF3CD",
+                    color: "#926c05",
+                    padding: "1px 7px",
+                    borderRadius: 5,
+                  }}
+                >
+                  Lunged
+                </span>
+              )}
+              {walk.dogPark && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    background: "#D4EDDA",
+                    color: "#155724",
+                    padding: "1px 7px",
+                    borderRadius: 5,
+                  }}
+                >
+                  Dog Park
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-        <div
-          style={{
-            background: "#007AFF",
-            borderRadius: 10,
-            padding: "4px 12px",
-            fontSize: 17,
-            fontWeight: 700,
-            color: "#fff",
-            minWidth: 36,
-            textAlign: "center",
-          }}
-        >
-          {walk.rating}
-        </div>
-      </div>
-
-      {expanded && (
-        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f2f2f7" }}>
-          <div style={{ fontSize: 13, color: "#8e8e93", marginBottom: 4 }}>
-            {formatFullDate(walk.date)}
-          </div>
-          {walk.notes && (
-            <p style={{ fontSize: 15, color: "#3a3a3c", margin: "8px 0", lineHeight: 1.5 }}>
-              {walk.notes}
-            </p>
-          )}
-          {walk.photo && (
-            <img
-              src={walk.photo}
-              alt="Walk"
-              style={{
-                width: "100%",
-                maxHeight: 240,
-                objectFit: "cover",
-                borderRadius: 10,
-                marginTop: 8,
-              }}
-            />
-          )}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm("Delete this walk?")) onDelete(walk.id);
-            }}
+          <div
             style={{
-              marginTop: 12,
-              background: "none",
-              border: "none",
-              color: "#FF3B30",
-              fontSize: 15,
-              cursor: "pointer",
-              padding: 0,
+              background: "#007AFF",
+              borderRadius: 8,
+              padding: "3px 10px",
+              fontSize: 17,
+              fontWeight: 700,
+              color: "#fff",
+              marginLeft: 12,
+              flexShrink: 0,
             }}
           >
-            Delete Walk
-          </button>
+            {walk.rating}
+          </div>
         </div>
-      )}
+
+        {expanded && (
+          <div
+            style={{
+              marginTop: 10,
+              paddingTop: 10,
+              borderTop: "0.5px solid #e5e5ea",
+            }}
+          >
+            <div style={{ fontSize: 13, color: "#aeaeb2" }}>{formatFullDate(walk.date)}</div>
+            {walk.notes && (
+              <p
+                style={{
+                  fontSize: 15,
+                  color: "#3a3a3c",
+                  margin: "8px 0",
+                  lineHeight: 1.45,
+                }}
+              >
+                {walk.notes}
+              </p>
+            )}
+            {walk.photo && (
+              <img
+                src={walk.photo}
+                alt="Walk"
+                style={{
+                  width: "100%",
+                  maxHeight: 220,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                  marginTop: 6,
+                }}
+              />
+            )}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (window.confirm("Delete this walk?")) onDelete(walk.id);
+              }}
+              style={{
+                marginTop: 10,
+                background: "none",
+                border: "none",
+                color: "#FF3B30",
+                fontSize: 15,
+                cursor: "pointer",
+                padding: 0,
+                fontWeight: 500,
+              }}
+            >
+              Delete
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
 
-/* ── main app ── */
+/* ════════════════════════════════════════
+   MAIN APP
+   ════════════════════════════════════════ */
 export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
   const [walks, setWalks] = useState([]);
   const [view, setView] = useState("home");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  // Log form state
-  const [walker, setWalker] = useState("");
+  // Form
+  const [walkerMe, setWalkerMe] = useState(false);
+  const [walkerHer, setWalkerHer] = useState(false);
   const [rating, setRating] = useState(7);
+  const [title, setTitle] = useState("");
   const [duration, setDuration] = useState("");
   const [notes, setNotes] = useState("");
   const [photo, setPhoto] = useState(null);
@@ -263,24 +376,28 @@ export default function App() {
   const [dogPark, setDogPark] = useState(false);
   const fileRef = useRef(null);
 
-  /* ── real-time sync from Firebase ── */
+  const hasWalker = walkerMe || walkerHer;
+
+  /* ── Firebase real-time ── */
   useEffect(() => {
     const q = query(collection(db, "walks"), orderBy("date", "desc"));
-    const unsub = onSnapshot(q, (snapshot) => {
-      const data = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-      setWalks(data);
+    const unsub = onSnapshot(q, (snap) => {
+      setWalks(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
       setLoading(false);
     });
     return unsub;
   }, []);
 
-  /* ── save walk ── */
+  /* ── save ── */
   const saveWalk = async () => {
-    if (!walker) return;
+    if (!hasWalker) return;
+    const walkerLabel =
+      walkerMe && walkerHer ? "Both" : walkerMe ? "Me" : "Her";
     setSaving(true);
     try {
       await addDoc(collection(db, "walks"), {
-        walker,
+        walker: walkerLabel,
+        title: title || null,
         rating,
         duration: duration ? Number(duration) : null,
         notes: notes || null,
@@ -290,36 +407,41 @@ export default function App() {
         date: new Date().toISOString(),
         createdAt: serverTimestamp(),
       });
-      setWalker("");
-      setRating(7);
-      setDuration("");
-      setNotes("");
-      setPhoto(null);
-      setLunged(false);
-      setDogPark(false);
+      resetForm();
       setView("home");
-    } catch (err) {
-      alert("Couldn't save — please try again.");
-      console.error(err);
+    } catch {
+      alert("Couldn't save — try again.");
     }
     setSaving(false);
   };
 
-  /* ── delete walk ── */
+  const resetForm = () => {
+    setWalkerMe(false);
+    setWalkerHer(false);
+    setRating(7);
+    setTitle("");
+    setDuration("");
+    setNotes("");
+    setPhoto(null);
+    setLunged(false);
+    setDogPark(false);
+  };
+
+  /* ── delete ── */
   const deleteWalk = async (id) => {
     try {
       await deleteDoc(doc(db, "walks", id));
     } catch {
-      alert("Couldn't delete — please try again.");
+      alert("Couldn't delete — try again.");
     }
   };
 
-  /* ── photo handling ── */
+  /* ── photo ── */
   const handlePhoto = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 3 * 1024 * 1024) {
-      alert("Photo is too large. Please use one under 3MB.");
+      alert("Photo too large — use one under 3MB.");
       return;
     }
     const reader = new FileReader();
@@ -328,457 +450,395 @@ export default function App() {
   };
 
   /* ── stats ── */
-  const totalWalks = walks.length;
-  const avgRating = totalWalks
-    ? (walks.reduce((s, w) => s + w.rating, 0) / totalWalks).toFixed(1)
-    : "—";
-  const last7 = walks.filter((w) => new Date() - new Date(w.date) < 7 * 86400000).length;
-  const lungeRate = totalWalks
-    ? Math.round((walks.filter((w) => w.lunged).length / totalWalks) * 100)
-    : 0;
+  const total = walks.length;
+  const avg = total ? (walks.reduce((s, w) => s + w.rating, 0) / total).toFixed(1) : "—";
+  const week = walks.filter((w) => new Date() - new Date(w.date) < 7 * 86400000).length;
+  const lungeP = total ? Math.round((walks.filter((w) => w.lunged).length / total) * 100) : 0;
   const streak = (() => {
     if (!walks.length) return 0;
     let count = 0;
     const sorted = [...walks].sort((a, b) => new Date(b.date) - new Date(a.date));
-    let checkDate = new Date();
-    checkDate.setHours(0, 0, 0, 0);
+    let d = new Date();
+    d.setHours(0, 0, 0, 0);
     for (let i = 0; i < 60; i++) {
-      const dayStr = checkDate.toDateString();
-      if (sorted.some((w) => new Date(w.date).toDateString() === dayStr)) {
+      if (sorted.some((w) => new Date(w.date).toDateString() === d.toDateString())) {
         count++;
-      } else if (i > 0) {
-        break;
-      }
-      checkDate.setDate(checkDate.getDate() - 1);
+      } else if (i > 0) break;
+      d.setDate(d.getDate() - 1);
     }
     return count;
   })();
 
-  const bg = "#f2f2f7";
-
-  if (loading) {
-    return (
-      <div
-        style={{
-          minHeight: "100vh",
-          background: bg,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily:
-            "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
-        }}
-      >
-        <div style={{ textAlign: "center", color: "#8e8e93" }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>🐕</div>
-          <div>Loading Pepper's walks...</div>
-        </div>
-      </div>
-    );
-  }
+  /* ── styles ── */
+  const font =
+    "-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro Display', system-ui, sans-serif";
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: bg,
-        fontFamily:
-          "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
-        maxWidth: 480,
-        margin: "0 auto",
-        paddingBottom: 40,
-      }}
-    >
+    <>
       <style>{`
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        input, textarea { font-family: inherit; }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        html { background: #f2f2f7; }
+        body { font-family: ${font}; background: #f2f2f7; -webkit-font-smoothing: antialiased; }
+        input, textarea { font-family: ${font}; }
+        input::placeholder, textarea::placeholder { color: #c7c7cc; }
       `}</style>
 
-      {/* ════════ HEADER ════════ */}
+      {showSplash && <SplashScreen onDone={() => setShowSplash(false)} />}
+
       <div
         style={{
-          padding: "52px 20px 16px",
-          textAlign: "center",
-          background: "#fff",
-          borderBottom: "1px solid #e5e5ea",
+          maxWidth: 480,
+          margin: "0 auto",
+          minHeight: "100vh",
+          background: "#f2f2f7",
+          paddingBottom: 40,
         }}
       >
-        <div style={{ fontSize: 28, fontWeight: 700, color: "#1c1c1e" }}>
-          Pepper 🐾
-        </div>
-        {streak > 1 && (
-          <div style={{ fontSize: 13, color: "#FF9500", marginTop: 4, fontWeight: 500 }}>
-            🔥 {streak}-day streak
-          </div>
-        )}
-      </div>
-
-      {/* ════════ HOME VIEW ════════ */}
-      {view === "home" && (
-        <div style={{ padding: "16px 16px 0", animation: "fadeIn 0.2s ease" }}>
-          {/* Stats */}
-          <Card>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
-              {[
-                { label: "This Week", value: last7 },
-                { label: "Avg Rating", value: avgRating },
-                { label: "Total", value: totalWalks },
-                { label: "Lunge %", value: `${lungeRate}%` },
-              ].map((s, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: "14px 8px",
-                    textAlign: "center",
-                    borderRight: i < 3 ? "1px solid #f2f2f7" : "none",
-                  }}
-                >
-                  <div style={{ fontSize: 22, fontWeight: 700, color: "#007AFF" }}>
-                    {s.value}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 2 }}>
-                    {s.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          {/* Log button */}
-          <button
-            onClick={() => setView("log")}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: "#007AFF",
-              border: "none",
-              borderRadius: 12,
-              color: "#fff",
-              fontSize: 17,
-              fontWeight: 600,
-              cursor: "pointer",
-              marginBottom: 20,
-            }}
-          >
-            + Log a Walk
-          </button>
-
-          {/* Recent walks */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-            }}
-          >
-            Recent Walks
-          </div>
-
-          {walks.length === 0 ? (
-            <Card style={{ padding: "40px 20px", textAlign: "center" }}>
-              <div style={{ fontSize: 40, marginBottom: 8 }}>🐕</div>
-              <div style={{ fontSize: 16, color: "#8e8e93" }}>No walks yet</div>
-              <div style={{ fontSize: 14, color: "#aeaeb2", marginTop: 4 }}>
-                Tap "Log a Walk" to get started
+        {/* ── HEADER ── */}
+        <div
+          style={{
+            background: "#fff",
+            padding: "env(safe-area-inset-top, 12px) 16px 14px",
+            paddingTop: "max(env(safe-area-inset-top, 12px), 12px)",
+            borderBottom: "0.5px solid #d1d1d6",
+            textAlign: "center",
+            position: "sticky",
+            top: 0,
+            zIndex: 100,
+          }}
+        >
+          {view === "home" ? (
+            <>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "#1c1c1e" }}>
+                Pepper 🐾
               </div>
-            </Card>
-          ) : (
-            <Card>
-              {walks.slice(0, 30).map((w, i) => (
-                <div key={w.id}>
-                  {i > 0 && <Divider />}
-                  <WalkCard walk={w} onDelete={deleteWalk} />
+              {streak > 1 && (
+                <div style={{ fontSize: 12, color: "#FF9500", fontWeight: 600, marginTop: 2 }}>
+                  🔥 {streak}-day streak
                 </div>
-              ))}
-            </Card>
+              )}
+            </>
+          ) : (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <button
+                onClick={() => { resetForm(); setView("home"); }}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: "#007AFF",
+                  fontSize: 17,
+                  cursor: "pointer",
+                  padding: 0,
+                  minWidth: 60,
+                  textAlign: "left",
+                }}
+              >
+                Cancel
+              </button>
+              <span style={{ fontSize: 17, fontWeight: 600, color: "#1c1c1e" }}>New Walk</span>
+              <button
+                onClick={saveWalk}
+                disabled={!hasWalker || saving}
+                style={{
+                  background: "none",
+                  border: "none",
+                  color: hasWalker ? "#007AFF" : "#c7c7cc",
+                  fontSize: 17,
+                  fontWeight: 600,
+                  cursor: hasWalker ? "pointer" : "default",
+                  padding: 0,
+                  minWidth: 60,
+                  textAlign: "right",
+                }}
+              >
+                {saving ? "..." : "Save"}
+              </button>
+            </div>
           )}
         </div>
-      )}
 
-      {/* ════════ LOG VIEW ════════ */}
-      {view === "log" && (
-        <div style={{ padding: "16px 16px 0", animation: "fadeIn 0.2s ease" }}>
-          {/* Nav bar */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: 20,
-            }}
-          >
+        {/* ════════ HOME ════════ */}
+        {view === "home" && !loading && (
+          <div style={{ padding: "16px", animation: "fadeIn 0.25s ease" }}>
+            {/* Stats */}
+            <Card>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+                {[
+                  { label: "Week", val: week },
+                  { label: "Avg", val: avg },
+                  { label: "Total", val: total },
+                  { label: "Lunge", val: `${lungeP}%` },
+                ].map((s, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      padding: "14px 4px",
+                      textAlign: "center",
+                      borderRight: i < 3 ? "0.5px solid #e5e5ea" : "none",
+                    }}
+                  >
+                    <div style={{ fontSize: 22, fontWeight: 700, color: "#007AFF" }}>
+                      {s.val}
+                    </div>
+                    <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 1, fontWeight: 500 }}>
+                      {s.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            {/* Log button */}
             <button
-              onClick={() => setView("home")}
+              onClick={() => setView("log")}
               style={{
-                background: "none",
+                width: "100%",
+                padding: "15px",
+                background: "#007AFF",
                 border: "none",
-                color: "#007AFF",
-                fontSize: 17,
-                cursor: "pointer",
-                padding: 0,
-              }}
-            >
-              Cancel
-            </button>
-            <span style={{ fontSize: 17, fontWeight: 600, color: "#1c1c1e" }}>
-              New Walk
-            </span>
-            <button
-              onClick={saveWalk}
-              disabled={!walker || saving}
-              style={{
-                background: "none",
-                border: "none",
-                color: walker ? "#007AFF" : "#aeaeb2",
+                borderRadius: 12,
+                color: "#fff",
                 fontSize: 17,
                 fontWeight: 600,
-                cursor: walker ? "pointer" : "default",
-                padding: 0,
+                cursor: "pointer",
+                marginBottom: 24,
               }}
             >
-              {saving ? "Saving..." : "Save"}
+              Log a Walk
             </button>
-          </div>
 
-          {/* Who walked */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-            }}
-          >
-            Who walked Pepper?
+            {/* Walks list */}
+            <SectionLabel>Recent</SectionLabel>
+
+            {walks.length === 0 ? (
+              <Card style={{ padding: "36px 20px", textAlign: "center" }}>
+                <div style={{ fontSize: 36, marginBottom: 6 }}>🐕</div>
+                <div style={{ fontSize: 15, color: "#8e8e93" }}>No walks yet</div>
+              </Card>
+            ) : (
+              <Card>
+                {walks.slice(0, 40).map((w, i) => (
+                  <div key={w.id}>
+                    {i > 0 && (
+                      <div style={{ height: 0.5, background: "#e5e5ea", marginLeft: 16 }} />
+                    )}
+                    <WalkCard walk={w} onDelete={deleteWalk} />
+                  </div>
+                ))}
+              </Card>
+            )}
           </div>
-          <Card>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
-              {["You", "Wife"].map((w, i) => (
-                <button
-                  key={w}
-                  onClick={() => setWalker(w)}
+        )}
+
+        {/* ════════ LOG ════════ */}
+        {view === "log" && (
+          <div style={{ padding: "16px", animation: "fadeIn 0.2s ease" }}>
+            {/* Walker selection */}
+            <SectionLabel>Who walked Pepper?</SectionLabel>
+            <Card>
+              <div style={{ display: "flex" }}>
+                {[
+                  { label: "🙋 Matt", active: walkerMe, set: setWalkerMe },
+                  { label: "🙋‍♀️ Sarah", active: walkerHer, set: setWalkerHer },
+                ].map((w, i) => (
+                  <button
+                    key={i}
+                    onClick={() => w.set(!w.active)}
+                    style={{
+                      flex: 1,
+                      padding: "14px",
+                      border: "none",
+                      borderRight: i === 0 ? "0.5px solid #e5e5ea" : "none",
+                      background: w.active ? "#007AFF" : "#fff",
+                      color: w.active ? "#fff" : "#1c1c1e",
+                      fontSize: 16,
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      transition: "all 0.12s",
+                    }}
+                  >
+                    {w.label}
+                  </button>
+                ))}
+              </div>
+            </Card>
+
+            {/* Walk title */}
+            <SectionLabel style={{ marginTop: 4 }}>Walk name</SectionLabel>
+            <Card>
+              <div style={{ padding: "10px 16px" }}>
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="e.g. Morning loop, Beach walk..."
                   style={{
-                    padding: "14px 16px",
+                    width: "100%",
+                    padding: "6px 0",
+                    background: "none",
                     border: "none",
-                    borderRight: i === 0 ? "1px solid #f2f2f7" : "none",
-                    background: walker === w ? "#007AFF" : "#fff",
-                    color: walker === w ? "#fff" : "#1c1c1e",
+                    color: "#1c1c1e",
+                    fontSize: 16,
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </Card>
+
+            {/* Rating */}
+            <SectionLabel style={{ marginTop: 4 }}>Rating</SectionLabel>
+            <Card>
+              <RatingRow value={rating} onChange={setRating} />
+            </Card>
+
+            {/* Details */}
+            <SectionLabel style={{ marginTop: 4 }}>Details</SectionLabel>
+            <Card>
+              <CardRow label="⚡ Lunged">
+                <Toggle value={lunged} onChange={setLunged} />
+              </CardRow>
+              <CardRow label="🏞️ Dog Park">
+                <Toggle value={dogPark} onChange={setDogPark} />
+              </CardRow>
+              <CardRow label="Duration" last>
+                <input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(e.target.value)}
+                  placeholder="min"
+                  style={{
+                    width: 70,
+                    padding: "6px 10px",
+                    background: "#f2f2f7",
+                    border: "none",
+                    borderRadius: 8,
+                    color: "#1c1c1e",
+                    fontSize: 16,
+                    outline: "none",
+                    textAlign: "right",
+                  }}
+                />
+              </CardRow>
+            </Card>
+
+            {/* Notes */}
+            <SectionLabel style={{ marginTop: 4 }}>Notes</SectionLabel>
+            <Card>
+              <div style={{ padding: "10px 16px" }}>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="How was the walk?"
+                  rows={3}
+                  style={{
+                    width: "100%",
+                    padding: "6px 0",
+                    background: "none",
+                    border: "none",
+                    color: "#1c1c1e",
+                    fontSize: 16,
+                    outline: "none",
+                    resize: "none",
+                    lineHeight: 1.45,
+                    fontFamily: "inherit",
+                  }}
+                />
+              </div>
+            </Card>
+
+            {/* Photo */}
+            <SectionLabel style={{ marginTop: 4 }}>Photo</SectionLabel>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handlePhoto}
+              style={{ display: "none" }}
+            />
+            {photo ? (
+              <Card style={{ position: "relative" }}>
+                <img
+                  src={photo}
+                  alt="Walk"
+                  style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
+                />
+                <button
+                  onClick={() => { setPhoto(null); fileRef.current.value = ""; }}
+                  style={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    background: "rgba(0,0,0,0.5)",
+                    backdropFilter: "blur(8px)",
+                    border: "none",
+                    color: "#fff",
+                    width: 28,
+                    height: 28,
+                    borderRadius: "50%",
+                    cursor: "pointer",
+                    fontSize: 16,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  ×
+                </button>
+              </Card>
+            ) : (
+              <Card>
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    width: "100%",
+                    padding: "14px",
+                    background: "#fff",
+                    border: "none",
+                    color: "#007AFF",
                     fontSize: 16,
                     fontWeight: 500,
                     cursor: "pointer",
-                    transition: "all 0.15s",
                   }}
                 >
-                  {w === "You" ? "🙋 Matt" : "🙋‍♀️ Sarah"}
+                  📷 Add Photo
                 </button>
-              ))}
-            </div>
-          </Card>
+              </Card>
+            )}
 
-          {/* Rating */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-              marginTop: 20,
-            }}
-          >
-            Rating
-          </div>
-          <Card style={{ padding: "14px 12px" }}>
-            <RatingSelector value={rating} onChange={setRating} />
-          </Card>
-
-          {/* Toggles */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-              marginTop: 20,
-            }}
-          >
-            Details
-          </div>
-          <Card>
-            <IOSToggle label="⚡ Lunged" value={lunged} onChange={setLunged} />
-            <Divider />
-            <IOSToggle label="🏞️ Dog Park" value={dogPark} onChange={setDogPark} />
-            <Divider />
-            <div style={{ padding: "12px 16px" }}>
-              <div style={{ fontSize: 16, color: "#1c1c1e", marginBottom: 8 }}>
-                Duration (minutes)
-              </div>
-              <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                placeholder="Optional"
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  background: "#f2f2f7",
-                  border: "none",
-                  borderRadius: 8,
-                  color: "#1c1c1e",
-                  fontSize: 16,
-                  outline: "none",
-                }}
-              />
-            </div>
-          </Card>
-
-          {/* Notes */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-              marginTop: 20,
-            }}
-          >
-            Notes
-          </div>
-          <Card style={{ padding: "12px 16px" }}>
-            <textarea
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="How was the walk?"
-              rows={3}
+            {/* Save button */}
+            <button
+              onClick={saveWalk}
+              disabled={!hasWalker || saving}
               style={{
                 width: "100%",
-                padding: "10px 12px",
-                background: "#f2f2f7",
+                padding: "15px",
+                background: hasWalker ? "#007AFF" : "#c7c7cc",
                 border: "none",
-                borderRadius: 8,
-                color: "#1c1c1e",
-                fontSize: 16,
-                outline: "none",
-                resize: "vertical",
-                lineHeight: 1.5,
-                fontFamily: "inherit",
+                borderRadius: 12,
+                color: "#fff",
+                fontSize: 17,
+                fontWeight: 600,
+                cursor: hasWalker ? "pointer" : "default",
+                marginTop: 8,
+                transition: "background 0.15s",
               }}
-            />
-          </Card>
-
-          {/* Photo */}
-          <div
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: "#8e8e93",
-              textTransform: "uppercase",
-              letterSpacing: 0.5,
-              padding: "0 4px",
-              marginBottom: 8,
-              marginTop: 20,
-            }}
-          >
-            Photo
+            >
+              {saving ? "Saving..." : "Save Walk"}
+            </button>
           </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handlePhoto}
-            style={{ display: "none" }}
-          />
-          {photo ? (
-            <Card style={{ position: "relative", overflow: "hidden" }}>
-              <img
-                src={photo}
-                alt="Walk"
-                style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
-              />
-              <button
-                onClick={() => {
-                  setPhoto(null);
-                  fileRef.current.value = "";
-                }}
-                style={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  background: "rgba(0,0,0,0.5)",
-                  border: "none",
-                  color: "#fff",
-                  width: 28,
-                  height: 28,
-                  borderRadius: "50%",
-                  cursor: "pointer",
-                  fontSize: 16,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                ×
-              </button>
-            </Card>
-          ) : (
-            <Card>
-              <button
-                onClick={() => fileRef.current?.click()}
-                style={{
-                  width: "100%",
-                  padding: "16px",
-                  background: "#fff",
-                  border: "none",
-                  color: "#007AFF",
-                  fontSize: 16,
-                  cursor: "pointer",
-                  textAlign: "center",
-                }}
-              >
-                📷 Add Photo
-              </button>
-            </Card>
-          )}
+        )}
 
-          {/* Bottom save button (for easy thumb reach) */}
-          <button
-            onClick={saveWalk}
-            disabled={!walker || saving}
-            style={{
-              width: "100%",
-              padding: "16px",
-              background: walker ? "#007AFF" : "#e5e5ea",
-              border: "none",
-              borderRadius: 12,
-              color: walker ? "#fff" : "#aeaeb2",
-              fontSize: 17,
-              fontWeight: 600,
-              cursor: walker ? "pointer" : "default",
-              marginTop: 24,
-              transition: "all 0.15s",
-            }}
-          >
-            {saving ? "Saving..." : "Save Walk"}
-          </button>
-        </div>
-      )}
-    </div>
+        {/* Loading state */}
+        {loading && view === "home" && (
+          <div style={{ padding: "60px 20px", textAlign: "center", color: "#8e8e93" }}>
+            <div style={{ fontSize: 36, marginBottom: 8 }}>🐕</div>
+            Loading...
+          </div>
+        )}
+      </div>
+    </>
   );
 }
