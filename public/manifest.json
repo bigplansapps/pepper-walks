@@ -1,0 +1,16 @@
+{
+  "name": "Pepper Walks",
+  "short_name": "Pepper",
+  "description": "Track Pepper's daily walks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1612",
+  "theme_color": "#1a1612",
+  "icons": [
+    {
+      "src": "/pepper-icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
