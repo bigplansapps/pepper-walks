@@ -11,9 +11,6 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-/* ── colours & constants ── */
-const WALKER_COLORS = { You: "#E8A87C", Wife: "#85CDCA" };
-
 /* ── helpers ── */
 function formatDate(iso) {
   const d = new Date(iso);
@@ -38,34 +35,66 @@ function formatFullDate(iso) {
   });
 }
 
-/* ── rating dots ── */
-function RatingDots({ value, onChange, size = 32 }) {
+/* ── iOS-style toggle ── */
+function IOSToggle({ label, value, onChange }) {
   return (
-    <div style={{ display: "flex", gap: 4, justifyContent: "center", flexWrap: "wrap" }}>
+    <div
+      onClick={() => onChange(!value)}
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "12px 16px",
+        cursor: "pointer",
+      }}
+    >
+      <span style={{ fontSize: 16, color: "#1c1c1e" }}>{label}</span>
+      <div
+        style={{
+          width: 51,
+          height: 31,
+          borderRadius: 16,
+          background: value ? "#34C759" : "#e9e9eb",
+          padding: 2,
+          transition: "background 0.2s",
+          cursor: "pointer",
+        }}
+      >
+        <div
+          style={{
+            width: 27,
+            height: 27,
+            borderRadius: "50%",
+            background: "#fff",
+            boxShadow: "0 1px 3px rgba(0,0,0,0.15)",
+            transition: "transform 0.2s",
+            transform: value ? "translateX(20px)" : "translateX(0)",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* ── rating selector ── */
+function RatingSelector({ value, onChange }) {
+  return (
+    <div style={{ display: "flex", gap: 6, justifyContent: "center", flexWrap: "wrap" }}>
       {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
         <button
           key={n}
           onClick={() => onChange(n)}
           style={{
-            width: size,
-            height: size,
-            borderRadius: "50%",
-            border: "2px solid",
-            borderColor: n <= value ? "#D4845A" : "rgba(180,160,140,0.3)",
-            background:
-              n <= value
-                ? "linear-gradient(135deg, #E8A87C, #D4845A)"
-                : "rgba(255,255,255,0.05)",
-            color: n <= value ? "#fff" : "rgba(180,160,140,0.5)",
-            fontSize: size * 0.4,
-            fontWeight: 700,
+            width: 36,
+            height: 36,
+            borderRadius: 10,
+            border: "none",
+            background: n <= value ? "#007AFF" : "#f2f2f7",
+            color: n <= value ? "#fff" : "#8e8e93",
+            fontSize: 15,
+            fontWeight: 600,
             cursor: "pointer",
-            transition: "all 0.2s",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            transform: n <= value ? "scale(1.05)" : "scale(1)",
-            boxShadow: n <= value ? "0 2px 8px rgba(212,132,90,0.3)" : "none",
+            transition: "all 0.15s",
           }}
         >
           {n}
@@ -75,95 +104,65 @@ function RatingDots({ value, onChange, size = 32 }) {
   );
 }
 
-/* ── toggle pill ── */
-function TogglePill({ label, emoji, value, onChange }) {
+/* ── iOS card wrapper ── */
+function Card({ children, style }) {
   return (
-    <button
-      onClick={() => onChange(!value)}
+    <div
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        padding: "12px 18px",
-        borderRadius: 14,
-        border: `2px solid ${value ? "#D4845A" : "rgba(180,160,140,0.15)"}`,
-        background: value ? "rgba(212,132,90,0.12)" : "rgba(255,255,255,0.03)",
-        color: value ? "#E8A87C" : "rgba(180,160,140,0.5)",
-        fontSize: 15,
-        fontWeight: 600,
-        cursor: "pointer",
-        transition: "all 0.2s",
-        flex: 1,
+        background: "#fff",
+        borderRadius: 12,
+        marginBottom: 12,
+        overflow: "hidden",
+        ...style,
       }}
     >
-      <span style={{ fontSize: 18 }}>{emoji}</span>
-      {label}
-      <span
-        style={{
-          marginLeft: "auto",
-          fontSize: 12,
-          fontWeight: 700,
-          letterSpacing: 0.5,
-        }}
-      >
-        {value ? "YES" : "NO"}
-      </span>
-    </button>
+      {children}
+    </div>
   );
+}
+
+/* ── divider ── */
+function Divider() {
+  return <div style={{ height: 1, background: "#f2f2f7", marginLeft: 16 }} />;
 }
 
 /* ── walk card ── */
 function WalkCard({ walk, onDelete }) {
   const [expanded, setExpanded] = useState(false);
-  const walkerColor = WALKER_COLORS[walk.walker] || "#ccc";
 
   return (
     <div
       onClick={() => setExpanded(!expanded)}
       style={{
-        background: "rgba(255,255,255,0.04)",
-        borderRadius: 16,
-        padding: "16px 20px",
+        padding: "14px 16px",
         cursor: "pointer",
-        borderLeft: `4px solid ${walkerColor}`,
-        transition: "all 0.2s",
-        marginBottom: 10,
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <div>
+        <div style={{ flex: 1 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                color: walkerColor,
-                textTransform: "uppercase",
-                letterSpacing: 1,
-              }}
-            >
+            <span style={{ fontSize: 16, fontWeight: 600, color: "#1c1c1e" }}>
               {walk.walker}
             </span>
-            <span style={{ fontSize: 12, color: "rgba(180,160,140,0.5)" }}>•</span>
-            <span style={{ fontSize: 13, color: "rgba(180,160,140,0.6)" }}>
+            <span style={{ fontSize: 14, color: "#8e8e93" }}>
               {formatDate(walk.date)}
             </span>
           </div>
-          <div style={{ display: "flex", gap: 8, marginTop: 4, flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: 6, marginTop: 4, flexWrap: "wrap" }}>
             {walk.duration && (
-              <span style={{ fontSize: 12, color: "rgba(180,160,140,0.4)" }}>
+              <span style={{ fontSize: 13, color: "#8e8e93" }}>
                 {walk.duration} min
               </span>
             )}
             {walk.lunged && (
               <span
                 style={{
-                  fontSize: 11,
-                  background: "rgba(220,120,100,0.15)",
-                  color: "#DC7864",
+                  fontSize: 12,
+                  background: "#FFF3CD",
+                  color: "#856404",
                   padding: "2px 8px",
                   borderRadius: 6,
-                  fontWeight: 600,
+                  fontWeight: 500,
                 }}
               >
                 Lunged
@@ -172,12 +171,12 @@ function WalkCard({ walk, onDelete }) {
             {walk.dogPark && (
               <span
                 style={{
-                  fontSize: 11,
-                  background: "rgba(133,205,202,0.15)",
-                  color: "#85CDCA",
+                  fontSize: 12,
+                  background: "#D1ECF1",
+                  color: "#0C5460",
                   padding: "2px 8px",
                   borderRadius: 6,
-                  fontWeight: 600,
+                  fontWeight: 500,
                 }}
               >
                 Dog Park
@@ -187,15 +186,14 @@ function WalkCard({ walk, onDelete }) {
         </div>
         <div
           style={{
-            background: "linear-gradient(135deg, #E8A87C, #D4845A)",
-            borderRadius: 12,
-            padding: "6px 14px",
-            fontSize: 18,
-            fontWeight: 800,
+            background: "#007AFF",
+            borderRadius: 10,
+            padding: "4px 12px",
+            fontSize: 17,
+            fontWeight: 700,
             color: "#fff",
-            minWidth: 44,
+            minWidth: 36,
             textAlign: "center",
-            fontFamily: "'DM Serif Display', Georgia, serif",
           }}
         >
           {walk.rating}
@@ -203,28 +201,13 @@ function WalkCard({ walk, onDelete }) {
       </div>
 
       {expanded && (
-        <div
-          style={{
-            marginTop: 14,
-            paddingTop: 14,
-            borderTop: "1px solid rgba(180,160,140,0.1)",
-            animation: "fadeIn 0.2s ease",
-          }}
-        >
-          <div style={{ fontSize: 12, color: "rgba(180,160,140,0.5)", marginBottom: 4 }}>
+        <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px solid #f2f2f7" }}>
+          <div style={{ fontSize: 13, color: "#8e8e93", marginBottom: 4 }}>
             {formatFullDate(walk.date)}
           </div>
           {walk.notes && (
-            <p
-              style={{
-                fontSize: 14,
-                color: "rgba(230,220,210,0.8)",
-                margin: "8px 0",
-                lineHeight: 1.5,
-                fontStyle: "italic",
-              }}
-            >
-              "{walk.notes}"
+            <p style={{ fontSize: 15, color: "#3a3a3c", margin: "8px 0", lineHeight: 1.5 }}>
+              {walk.notes}
             </p>
           )}
           {walk.photo && (
@@ -235,7 +218,7 @@ function WalkCard({ walk, onDelete }) {
                 width: "100%",
                 maxHeight: 240,
                 objectFit: "cover",
-                borderRadius: 12,
+                borderRadius: 10,
                 marginTop: 8,
               }}
             />
@@ -243,20 +226,19 @@ function WalkCard({ walk, onDelete }) {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              onDelete(walk.id);
+              if (window.confirm("Delete this walk?")) onDelete(walk.id);
             }}
             style={{
               marginTop: 12,
               background: "none",
-              border: "1px solid rgba(200,100,100,0.3)",
-              color: "rgba(200,100,100,0.6)",
-              fontSize: 12,
-              padding: "6px 14px",
-              borderRadius: 8,
+              border: "none",
+              color: "#FF3B30",
+              fontSize: 15,
               cursor: "pointer",
+              padding: 0,
             }}
           >
-            Delete walk
+            Delete Walk
           </button>
         </div>
       )}
@@ -308,7 +290,6 @@ export default function App() {
         date: new Date().toISOString(),
         createdAt: serverTimestamp(),
       });
-      // Reset form
       setWalker("");
       setRating(7);
       setDuration("");
@@ -373,29 +354,22 @@ export default function App() {
     return count;
   })();
 
-  /* ── styles ── */
-  const containerStyle = {
-    minHeight: "100vh",
-    background: "linear-gradient(170deg, #1a1612 0%, #2a2218 40%, #1e1a14 100%)",
-    color: "#E6DCD0",
-    fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif",
-    maxWidth: 480,
-    margin: "0 auto",
-    position: "relative",
-    paddingBottom: 100,
-  };
+  const bg = "#f2f2f7";
 
   if (loading) {
     return (
       <div
         style={{
-          ...containerStyle,
+          minHeight: "100vh",
+          background: bg,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          fontFamily:
+            "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
         }}
       >
-        <div style={{ textAlign: "center", opacity: 0.5 }}>
+        <div style={{ textAlign: "center", color: "#8e8e93" }}>
           <div style={{ fontSize: 40, marginBottom: 12 }}>🐕</div>
           <div>Loading Pepper's walks...</div>
         </div>
@@ -404,377 +378,407 @@ export default function App() {
   }
 
   return (
-    <div style={containerStyle}>
-      <link
-        href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap"
-        rel="stylesheet"
-      />
+    <div
+      style={{
+        minHeight: "100vh",
+        background: bg,
+        fontFamily:
+          "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', system-ui, sans-serif",
+        maxWidth: 480,
+        margin: "0 auto",
+        paddingBottom: 40,
+      }}
+    >
       <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         input, textarea { font-family: inherit; }
-        ::placeholder { color: rgba(180,160,140,0.35); }
       `}</style>
 
-      {/* HEADER */}
-      <div style={{ padding: "32px 24px 20px", textAlign: "center" }}>
-        <div
-          style={{
-            fontSize: 11,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-            color: "rgba(180,160,140,0.4)",
-            marginBottom: 4,
-            fontWeight: 600,
-          }}
-        >
-          Walk Tracker
-        </div>
-        <h1
-          style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
-            fontSize: 36,
-            fontWeight: 400,
-            background: "linear-gradient(135deg, #E8A87C, #85CDCA)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            letterSpacing: -0.5,
-          }}
-        >
+      {/* ════════ HEADER ════════ */}
+      <div
+        style={{
+          padding: "52px 20px 16px",
+          textAlign: "center",
+          background: "#fff",
+          borderBottom: "1px solid #e5e5ea",
+        }}
+      >
+        <div style={{ fontSize: 28, fontWeight: 700, color: "#1c1c1e" }}>
           Pepper 🐾
-        </h1>
+        </div>
         {streak > 1 && (
-          <div
-            style={{
-              fontSize: 12,
-              color: "#E8A87C",
-              marginTop: 6,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 4,
-            }}
-          >
-            🔥 {streak}-day streak!
+          <div style={{ fontSize: 13, color: "#FF9500", marginTop: 4, fontWeight: 500 }}>
+            🔥 {streak}-day streak
           </div>
         )}
       </div>
 
       {/* ════════ HOME VIEW ════════ */}
       {view === "home" && (
-        <div style={{ padding: "0 20px", animation: "fadeIn 0.3s ease" }}>
-          {/* Stats row */}
-          <div
-            style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8, marginBottom: 24 }}
-          >
-            {[
-              { label: "This Week", value: last7 },
-              { label: "Avg Rating", value: avgRating },
-              { label: "Total", value: totalWalks },
-              { label: "Lunge %", value: `${lungeRate}%` },
-            ].map((s, i) => (
-              <div
-                key={i}
-                style={{
-                  background: "rgba(255,255,255,0.04)",
-                  borderRadius: 14,
-                  padding: "14px 6px",
-                  textAlign: "center",
-                }}
-              >
+        <div style={{ padding: "16px 16px 0", animation: "fadeIn 0.2s ease" }}>
+          {/* Stats */}
+          <Card>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr" }}>
+              {[
+                { label: "This Week", value: last7 },
+                { label: "Avg Rating", value: avgRating },
+                { label: "Total", value: totalWalks },
+                { label: "Lunge %", value: `${lungeRate}%` },
+              ].map((s, i) => (
                 <div
+                  key={i}
                   style={{
-                    fontSize: 20,
-                    fontWeight: 700,
-                    fontFamily: "'DM Serif Display', Georgia, serif",
-                    color: "#E8A87C",
+                    padding: "14px 8px",
+                    textAlign: "center",
+                    borderRight: i < 3 ? "1px solid #f2f2f7" : "none",
                   }}
                 >
-                  {s.value}
+                  <div style={{ fontSize: 22, fontWeight: 700, color: "#007AFF" }}>
+                    {s.value}
+                  </div>
+                  <div style={{ fontSize: 11, color: "#8e8e93", marginTop: 2 }}>
+                    {s.label}
+                  </div>
                 </div>
-                <div
-                  style={{
-                    fontSize: 10,
-                    color: "rgba(180,160,140,0.45)",
-                    marginTop: 2,
-                    letterSpacing: 0.5,
-                  }}
-                >
-                  {s.label}
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </Card>
 
-          {/* Big LOG button */}
+          {/* Log button */}
           <button
             onClick={() => setView("log")}
             style={{
               width: "100%",
-              padding: "18px",
-              background: "linear-gradient(135deg, #D4845A, #C06A3A)",
+              padding: "16px",
+              background: "#007AFF",
               border: "none",
-              borderRadius: 16,
+              borderRadius: 12,
               color: "#fff",
-              fontSize: 18,
-              fontWeight: 700,
+              fontSize: 17,
+              fontWeight: 600,
               cursor: "pointer",
-              marginBottom: 28,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 10,
-              boxShadow: "0 4px 20px rgba(212,132,90,0.3)",
-              letterSpacing: 0.5,
+              marginBottom: 20,
             }}
           >
-            <span style={{ fontSize: 22 }}>+</span> Log a Walk
+            + Log a Walk
           </button>
 
           {/* Recent walks */}
-          <h2
+          <div
             style={{
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: 600,
-              letterSpacing: 1.5,
+              color: "#8e8e93",
               textTransform: "uppercase",
-              color: "rgba(180,160,140,0.45)",
-              marginBottom: 14,
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
             }}
           >
             Recent Walks
-          </h2>
+          </div>
 
           {walks.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "48px 20px",
-                color: "rgba(180,160,140,0.35)",
-              }}
-            >
-              <div style={{ fontSize: 48, marginBottom: 12 }}>🐕</div>
-              <div style={{ fontSize: 15 }}>No walks yet!</div>
-              <div style={{ fontSize: 13, marginTop: 4 }}>
+            <Card style={{ padding: "40px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 40, marginBottom: 8 }}>🐕</div>
+              <div style={{ fontSize: 16, color: "#8e8e93" }}>No walks yet</div>
+              <div style={{ fontSize: 14, color: "#aeaeb2", marginTop: 4 }}>
                 Tap "Log a Walk" to get started
               </div>
-            </div>
+            </Card>
           ) : (
-            walks.slice(0, 30).map((w) => (
-              <WalkCard key={w.id} walk={w} onDelete={deleteWalk} />
-            ))
+            <Card>
+              {walks.slice(0, 30).map((w, i) => (
+                <div key={w.id}>
+                  {i > 0 && <Divider />}
+                  <WalkCard walk={w} onDelete={deleteWalk} />
+                </div>
+              ))}
+            </Card>
           )}
         </div>
       )}
 
       {/* ════════ LOG VIEW ════════ */}
       {view === "log" && (
-        <div style={{ padding: "0 20px", animation: "slideUp 0.3s ease" }}>
-          <button
-            onClick={() => setView("home")}
+        <div style={{ padding: "16px 16px 0", animation: "fadeIn 0.2s ease" }}>
+          {/* Nav bar */}
+          <div
             style={{
-              background: "none",
-              border: "none",
-              color: "rgba(180,160,140,0.5)",
-              fontSize: 14,
-              cursor: "pointer",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
               marginBottom: 20,
-              padding: 0,
             }}
           >
-            ← Back
-          </button>
+            <button
+              onClick={() => setView("home")}
+              style={{
+                background: "none",
+                border: "none",
+                color: "#007AFF",
+                fontSize: 17,
+                cursor: "pointer",
+                padding: 0,
+              }}
+            >
+              Cancel
+            </button>
+            <span style={{ fontSize: 17, fontWeight: 600, color: "#1c1c1e" }}>
+              New Walk
+            </span>
+            <button
+              onClick={saveWalk}
+              disabled={!walker || saving}
+              style={{
+                background: "none",
+                border: "none",
+                color: walker ? "#007AFF" : "#aeaeb2",
+                fontSize: 17,
+                fontWeight: 600,
+                cursor: walker ? "pointer" : "default",
+                padding: 0,
+              }}
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
 
-          {/* Who walked? */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>Who walked Pepper?</label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              {["You", "Wife"].map((w) => (
+          {/* Who walked */}
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8e8e93",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
+            }}
+          >
+            Who walked Pepper?
+          </div>
+          <Card>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr" }}>
+              {["You", "Wife"].map((w, i) => (
                 <button
                   key={w}
                   onClick={() => setWalker(w)}
                   style={{
-                    padding: "16px",
-                    borderRadius: 14,
-                    border: `2px solid ${
-                      walker === w ? WALKER_COLORS[w] : "rgba(180,160,140,0.15)"
-                    }`,
-                    background:
-                      walker === w ? `${WALKER_COLORS[w]}15` : "rgba(255,255,255,0.03)",
-                    color: walker === w ? WALKER_COLORS[w] : "rgba(180,160,140,0.5)",
+                    padding: "14px 16px",
+                    border: "none",
+                    borderRight: i === 0 ? "1px solid #f2f2f7" : "none",
+                    background: walker === w ? "#007AFF" : "#fff",
+                    color: walker === w ? "#fff" : "#1c1c1e",
                     fontSize: 16,
-                    fontWeight: 600,
+                    fontWeight: 500,
                     cursor: "pointer",
-                    transition: "all 0.2s",
+                    transition: "all 0.15s",
                   }}
                 >
                   {w === "You" ? "🙋 Matt" : "🙋‍♀️ Sarah"}
                 </button>
               ))}
             </div>
-          </div>
+          </Card>
 
           {/* Rating */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>How was the walk?</label>
-            <RatingDots value={rating} onChange={setRating} />
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8e8e93",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
+              marginTop: 20,
+            }}
+          >
+            Rating
           </div>
+          <Card style={{ padding: "14px 12px" }}>
+            <RatingSelector value={rating} onChange={setRating} />
+          </Card>
 
-          {/* Lunged + Dog Park toggles */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>What happened?</label>
-            <div style={{ display: "flex", gap: 10 }}>
-              <TogglePill
-                label="Lunged"
-                emoji="⚡"
-                value={lunged}
-                onChange={setLunged}
-              />
-              <TogglePill
-                label="Dog Park"
-                emoji="🏞️"
-                value={dogPark}
-                onChange={setDogPark}
+          {/* Toggles */}
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8e8e93",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
+              marginTop: 20,
+            }}
+          >
+            Details
+          </div>
+          <Card>
+            <IOSToggle label="⚡ Lunged" value={lunged} onChange={setLunged} />
+            <Divider />
+            <IOSToggle label="🏞️ Dog Park" value={dogPark} onChange={setDogPark} />
+            <Divider />
+            <div style={{ padding: "12px 16px" }}>
+              <div style={{ fontSize: 16, color: "#1c1c1e", marginBottom: 8 }}>
+                Duration (minutes)
+              </div>
+              <input
+                type="number"
+                value={duration}
+                onChange={(e) => setDuration(e.target.value)}
+                placeholder="Optional"
+                style={{
+                  width: "100%",
+                  padding: "10px 12px",
+                  background: "#f2f2f7",
+                  border: "none",
+                  borderRadius: 8,
+                  color: "#1c1c1e",
+                  fontSize: 16,
+                  outline: "none",
+                }}
               />
             </div>
-          </div>
-
-          {/* Duration */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>Duration (minutes) — optional</label>
-            <input
-              type="number"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              placeholder="e.g. 30"
-              style={inputStyle}
-            />
-          </div>
+          </Card>
 
           {/* Notes */}
-          <div style={{ marginBottom: 28 }}>
-            <label style={labelStyle}>Notes — optional</label>
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8e8e93",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
+              marginTop: 20,
+            }}
+          >
+            Notes
+          </div>
+          <Card style={{ padding: "12px 16px" }}>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Pepper chased a squirrel 🐿️"
+              placeholder="How was the walk?"
               rows={3}
-              style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5 }}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: "#f2f2f7",
+                border: "none",
+                borderRadius: 8,
+                color: "#1c1c1e",
+                fontSize: 16,
+                outline: "none",
+                resize: "vertical",
+                lineHeight: 1.5,
+                fontFamily: "inherit",
+              }}
             />
-          </div>
+          </Card>
 
           {/* Photo */}
-          <div style={{ marginBottom: 36 }}>
-            <label style={labelStyle}>Photo — optional</label>
-            <input
-              ref={fileRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handlePhoto}
-              style={{ display: "none" }}
-            />
-            {photo ? (
-              <div style={{ position: "relative" }}>
-                <img
-                  src={photo}
-                  alt="Walk"
-                  style={{
-                    width: "100%",
-                    maxHeight: 200,
-                    objectFit: "cover",
-                    borderRadius: 12,
-                  }}
-                />
-                <button
-                  onClick={() => {
-                    setPhoto(null);
-                    fileRef.current.value = "";
-                  }}
-                  style={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    background: "rgba(0,0,0,0.6)",
-                    border: "none",
-                    color: "#fff",
-                    width: 30,
-                    height: 30,
-                    borderRadius: "50%",
-                    cursor: "pointer",
-                    fontSize: 16,
-                  }}
-                >
-                  ×
-                </button>
-              </div>
-            ) : (
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#8e8e93",
+              textTransform: "uppercase",
+              letterSpacing: 0.5,
+              padding: "0 4px",
+              marginBottom: 8,
+              marginTop: 20,
+            }}
+          >
+            Photo
+          </div>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhoto}
+            style={{ display: "none" }}
+          />
+          {photo ? (
+            <Card style={{ position: "relative", overflow: "hidden" }}>
+              <img
+                src={photo}
+                alt="Walk"
+                style={{ width: "100%", maxHeight: 200, objectFit: "cover", display: "block" }}
+              />
+              <button
+                onClick={() => {
+                  setPhoto(null);
+                  fileRef.current.value = "";
+                }}
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  right: 8,
+                  background: "rgba(0,0,0,0.5)",
+                  border: "none",
+                  color: "#fff",
+                  width: 28,
+                  height: 28,
+                  borderRadius: "50%",
+                  cursor: "pointer",
+                  fontSize: 16,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                ×
+              </button>
+            </Card>
+          ) : (
+            <Card>
               <button
                 onClick={() => fileRef.current?.click()}
                 style={{
                   width: "100%",
-                  padding: "20px",
-                  background: "rgba(255,255,255,0.03)",
-                  border: "2px dashed rgba(180,160,140,0.15)",
-                  borderRadius: 12,
-                  color: "rgba(180,160,140,0.4)",
-                  fontSize: 14,
+                  padding: "16px",
+                  background: "#fff",
+                  border: "none",
+                  color: "#007AFF",
+                  fontSize: 16,
                   cursor: "pointer",
+                  textAlign: "center",
                 }}
               >
-                📷 Tap to add photo
+                📷 Add Photo
               </button>
-            )}
-          </div>
+            </Card>
+          )}
 
-          {/* Save */}
+          {/* Bottom save button (for easy thumb reach) */}
           <button
             onClick={saveWalk}
             disabled={!walker || saving}
             style={{
               width: "100%",
-              padding: "18px",
-              background: walker
-                ? "linear-gradient(135deg, #D4845A, #C06A3A)"
-                : "rgba(180,160,140,0.15)",
+              padding: "16px",
+              background: walker ? "#007AFF" : "#e5e5ea",
               border: "none",
-              borderRadius: 16,
-              color: walker ? "#fff" : "rgba(180,160,140,0.3)",
+              borderRadius: 12,
+              color: walker ? "#fff" : "#aeaeb2",
               fontSize: 17,
-              fontWeight: 700,
+              fontWeight: 600,
               cursor: walker ? "pointer" : "default",
-              marginBottom: 20,
-              boxShadow: walker ? "0 4px 20px rgba(212,132,90,0.3)" : "none",
-              transition: "all 0.2s",
+              marginTop: 24,
+              transition: "all 0.15s",
             }}
           >
-            {saving ? "Saving..." : "Save Walk ✓"}
+            {saving ? "Saving..." : "Save Walk"}
           </button>
         </div>
       )}
     </div>
   );
 }
-
-/* ── shared styles ── */
-const labelStyle = {
-  fontSize: 12,
-  letterSpacing: 1.5,
-  textTransform: "uppercase",
-  color: "rgba(180,160,140,0.45)",
-  fontWeight: 600,
-  display: "block",
-  marginBottom: 10,
-};
-
-const inputStyle = {
-  width: "100%",
-  padding: "14px 16px",
-  background: "rgba(255,255,255,0.05)",
-  border: "1px solid rgba(180,160,140,0.12)",
-  borderRadius: 12,
-  color: "#E6DCD0",
-  fontSize: 16,
-  outline: "none",
-};
